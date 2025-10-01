@@ -1,0 +1,7 @@
+[general]
+name=Layer loader
+description=Plugin to load additional read-only layers
+author=marco@OPENGIS.ch
+icon=icon.svg
+version=0.1
+homepage=https://www.opengis.ch/
