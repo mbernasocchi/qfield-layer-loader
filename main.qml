@@ -45,9 +45,14 @@ Item {
     console.log('Fetching results....');
   }
 
-  function loadRemoteLayer(url, title){
+  function loadRemoteLayer(url, title, is_vector){
     mainWindow.displayToast(qsTr('Loading ') + url)
-    let layer = LayerUtils.loadVectorLayer("/vsicurl/" + url, title ? title : qsTr("Remote Layer"))
+    let layer;
+    if (is_vector) {
+      layer = LayerUtils.loadVectorLayer("/vsicurl/" + url, title ? title : qsTr("Remote layer"))
+    } else {
+      layer = LayerUtils.loadRasterLayer("/vsicurl/" + url, title ? title : qsTr("Remote layer"))
+    }
     ProjectUtils.addMapLayer(qgisProject, layer)
   }
 
@@ -73,6 +78,29 @@ Item {
       ColumnLayout {
           width: parent.width
           spacing: 10
+          
+          Label {
+              Layout.fillWidth: true
+              text: qsTr("Layer type")
+          }
+          
+          RowLayout {
+              Layout.fillWidth: true
+              spacing: 20
+              
+              RadioButton {
+                  id: radioRaster
+                  text: qsTr("Raster")
+                  checked: false
+              }
+              
+              RadioButton {
+                  id: radioVector
+                  text: qsTr("Vector")
+                  checked: true
+              }
+          }
+          
           Label {
               id: labelfileUrl
               Layout.fillWidth: true
@@ -84,6 +112,7 @@ Item {
               Layout.fillWidth: true
               text: 'QGIS Hackfest POIs'
           }
+
           Label {
               id: labelFileName
               Layout.fillWidth: true
@@ -98,7 +127,7 @@ Item {
       }
 
       onAccepted: {
-          loadRemoteLayer(textFieldFileUrl.text, textFieldFileName.text)
+          loadRemoteLayer(textFieldFileUrl.text, textFieldFileName.text, radioVector.checked)
       }
     }
 }
