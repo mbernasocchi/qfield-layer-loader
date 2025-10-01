@@ -12,11 +12,6 @@ import Theme
 Item {
   id: plugin
   
-  Settings {
-    id: settings
-    property string file_url: "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/36/Q/WD/2020/7/S2A_36QWD_20200701_0_L2A/TCI.tif"
-  }
-
   property var mainWindow: iface.mainWindow()
 
   Component.onCompleted: {
@@ -79,55 +74,93 @@ Item {
           width: parent.width
           spacing: 10
           
-          Label {
+          TabBar {
+              id: tabBar
               Layout.fillWidth: true
-              text: qsTr("Layer type")
-          }
-          
-          RowLayout {
-              Layout.fillWidth: true
-              spacing: 20
               
-              RadioButton {
-                  id: radioRaster
-                  text: qsTr("Raster")
-                  checked: false
+              TabButton {
+                  text: qsTr("Remote Layer")
               }
               
-              RadioButton {
-                  id: radioVector
-                  text: qsTr("Vector")
-                  checked: true
+              TabButton {
+                  text: qsTr("Local Layer")
               }
           }
           
-          Label {
-              id: labelfileUrl
+          StackLayout {
               Layout.fillWidth: true
-              text: qsTr("Remote layer name")
-          }
+              currentIndex: tabBar.currentIndex
+              
+              // Remote Layer Tab
+              ColumnLayout {
+                  spacing: 10
+                  
+                  RowLayout {
+                      Layout.fillWidth: true
+                      spacing: 20
+                      
+                      RadioButton {
+                          id: radioRaster
+                          text: qsTr("Raster")
+                          checked: false
+                      }
+                      
+                      RadioButton {
+                          id: radioVector
+                          text: qsTr("Vector")
+                          checked: true
+                      }
+                  }
+                  
+                  Label {
+                      id: labelfileUrl
+                      Layout.fillWidth: true
+                      text: qsTr("Legend name")
+                  }
 
-          QfTextField {
-              id: textFieldFileName
-              Layout.fillWidth: true
-              text: 'QGIS Hackfest POIs'
-          }
+                  QfTextField {
+                      id: textFieldFileName
+                      Layout.fillWidth: true
+                      text: 'QGIS Hackfest POIs'
+                  }
 
-          Label {
-              id: labelFileName
-              Layout.fillWidth: true
-              text: qsTr("Remote layer URL")
-          }
+                  Label {
+                      id: labelFileName
+                      Layout.fillWidth: true
+                      text: qsTr("URL")
+                  }
 
-          QfTextField {
-              id: textFieldFileUrl
-              Layout.fillWidth: true
-              text: "https://raw.githubusercontent.com/qgis/QGIS/refs/heads/master/resources/data/qgis-hackfests.json"
-          }  
+                  QfTextField {
+                      id: textFieldFileUrl
+                      Layout.fillWidth: true
+                      text: "https://raw.githubusercontent.com/qgis/QGIS/refs/heads/master/resources/data/qgis-hackfests.json"
+                  }
+              }
+              
+              // Local Layer Tab
+              ColumnLayout {
+                  spacing: 10
+                  
+                  Label {
+                      Layout.fillWidth: true
+                      text: qsTr("Select a local file")
+                  }
+                  
+                  Button {
+                      Layout.fillWidth: true
+                      text: qsTr("Browse...")
+                      onClicked: loadLocalLayer()
+                  }
+              }
+          }
       }
 
       onAccepted: {
-          loadRemoteLayer(textFieldFileUrl.text, textFieldFileName.text, radioVector.checked)
+          if (tabBar.currentIndex === 0) {
+              loadRemoteLayer(textFieldFileUrl.text, textFieldFileName.text, radioVector.checked)
+          } else {
+              loadLocalLayer()
+          }
       }
     }
 }
