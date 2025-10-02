@@ -75,6 +75,11 @@ Item {
         x: (mainWindow.width - width) / 2
         y: (mainWindow.height - height) / 2
 
+        onAboutToShow: {
+            // reset fields
+            connections.localPath = "";
+        }
+
         ColumnLayout {
             width: parent.width
             spacing: 10
