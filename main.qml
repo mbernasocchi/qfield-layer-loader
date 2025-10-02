@@ -12,6 +12,7 @@ Item {
     id: plugin
 
     property var mainWindow: iface.mainWindow()
+    property ResourceSource __resourceSource
 
     Component.onCompleted: {
         iface.addItemToPluginsToolbar(pluginButton);
@@ -29,28 +30,35 @@ Item {
         }
     }
 
-    function chooseLayer() {
-        let prompt = `Hello`;
-        console.log(prompt);
+    Connections {
+        target: __resourceSource
+        function onResourceReceived(path) {
+            if (path) {
+                loadLayer(path, "layer");
+            }
+        }
+    }
 
-        mainWindow.displayToast(qsTr('Your current position is unknown\n Not loading POIs nearby'));
-
-        console.log('Fetching results....');
+    function getFile() {
+        platformUtilities.requestStoragePermission();
+        __resourceSource = platformUtilities.getFile(qgisProject.homePath + '/tmp/', '{filename}', this);
     }
 
     function loadRemoteLayer(url, title, is_vector) {
         mainWindow.displayToast(qsTr('Loading ') + url);
-        let layer;
-        if (is_vector) {
-            layer = LayerUtils.loadVectorLayer("/vsicurl/" + url, title ? title : qsTr("Remote layer"));
-        } else {
-            layer = LayerUtils.loadRasterLayer("/vsicurl/" + url, title ? title : qsTr("Remote layer"));
-        }
-        ProjectUtils.addMapLayer(qgisProject, layer);
+        let path = "/vsicurl/" + url;
+        loadLayer(path, title, is_vector);
     }
 
-    function loadLocalLayer() {
-        mainWindow.displayToast(qsTr('Open local file picker '));
+    function loadLayer(path, title, is_vector=true) {
+        mainWindow.displayToast(qsTr('Loading ') + path + ' as ' + title);
+        let layer;
+        if (is_vector) {
+            layer = LayerUtils.loadVectorLayer(path, title ? title : qsTr("Read-only layer"));
+        } else {
+            layer = LayerUtils.loadRasterLayer(path, title ? title : qsTr("Read-only layer"));
+        }
+        ProjectUtils.addMapLayer(qgisProject, layer);
     }
 
     Dialog {
@@ -168,7 +176,7 @@ Item {
                     Button {
                         Layout.fillWidth: true
                         text: qsTr("Browse local file...")
-                        onClicked: loadLocalLayer()
+                        onClicked: getFile()
                     }
                 }
             }
@@ -177,9 +185,7 @@ Item {
         onAccepted: {
             if (tabBar.currentIndex === 0) {
                 loadRemoteLayer(textFieldRemoteUrl.text, textFieldRemoteFileName.text, radioRemoteVector.checked);
-            } else {
-                loadLocalLayer();
-            }
+            } 
         }
     }
 }
