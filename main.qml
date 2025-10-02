@@ -31,10 +31,12 @@ Item {
     }
 
     Connections {
+        id: connections
         target: __resourceSource
+        property string localPath: ""
         function onResourceReceived(path) {
             if (path) {
-                loadLayer(qgisProject.homePath + '/tmp/' + path, "layer");
+                localPath = qgisProject.homePath + '/tmp/' + path;
             }
         }
     }
@@ -42,11 +44,9 @@ Item {
     function getFile() {
         platformUtilities.requestStoragePermission();
         __resourceSource = platformUtilities.getFile(qgisProject.homePath + '/tmp/', '{filename}', this);
-        mainWindow.displayToast(qsTr('getFile ') + __resourceSource);
     }
 
     function loadRemoteLayer(url, title, is_vector) {
-        mainWindow.displayToast(qsTr('Loading remote ') + url);
         let path = "/vsicurl/" + url;
         loadLayer(path, title, is_vector);
     }
@@ -187,6 +187,9 @@ Item {
             if (tabBar.currentIndex === 0) {
                 loadRemoteLayer(textFieldRemoteUrl.text, textFieldRemoteFileName.text, radioRemoteVector.checked);
             } 
+            else{
+                loadLayer(connections.localPath, textFieldLocalFileName.text, radioLocalVector.checked);
+                }
         }
     }
 }
