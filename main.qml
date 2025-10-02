@@ -34,7 +34,7 @@ Item {
         target: __resourceSource
         function onResourceReceived(path) {
             if (path) {
-                loadLayer(path, "layer");
+                loadLayer(qgisProject.homePath + '/tmp/' + path, "layer");
             }
         }
     }
