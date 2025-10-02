@@ -42,15 +42,16 @@ Item {
     function getFile() {
         platformUtilities.requestStoragePermission();
         __resourceSource = platformUtilities.getFile(qgisProject.homePath + '/tmp/', '{filename}', this);
+        mainWindow.displayToast(qsTr('getFile ') + __resourceSource);
     }
 
     function loadRemoteLayer(url, title, is_vector) {
-        mainWindow.displayToast(qsTr('Loading ') + url);
+        mainWindow.displayToast(qsTr('Loading remote ') + url);
         let path = "/vsicurl/" + url;
         loadLayer(path, title, is_vector);
     }
 
-    function loadLayer(path, title, is_vector=true) {
+    function loadLayer(path, title, is_vector=false) {
         mainWindow.displayToast(qsTr('Loading ') + path + ' as ' + title);
         let layer;
         if (is_vector) {
