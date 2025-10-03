@@ -62,13 +62,13 @@ Item {
         ProjectUtils.addMapLayer(qgisProject, layer);
     }
 
-    Dialog {
+    QfDialog {
         id: layerDialog
         parent: mainWindow.contentItem
         visible: false
         modal: true
         font: Theme.defaultFont
-        standardButtons: Dialog.Ok | Dialog.Cancel
+        standardButtons: Dialog.Apply | Dialog.Cancel
         title: qsTr("Load read-only layer")
 
         width: mainWindow.width * 0.8
@@ -89,7 +89,7 @@ Item {
                 text: qsTr("Layer source")
             }
 
-            ComboBox {
+            QfComboBox {
                 id: comboLayerSource
                 Layout.fillWidth: true
                 model: [qsTr("Remote Layer"), qsTr("Local Layer")]
