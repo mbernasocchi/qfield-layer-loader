@@ -84,123 +84,86 @@ Item {
             width: parent.width
             spacing: 10
 
-            TabBar {
-                id: tabBar
+            Label {
                 Layout.fillWidth: true
+                text: qsTr("Layer source")
+            }
 
-                TabButton {
-                    text: qsTr("Remote Layer")
+            ComboBox {
+                id: comboLayerSource
+                Layout.fillWidth: true
+                model: [qsTr("Remote Layer"), qsTr("Local Layer")]
+                currentIndex: 0
+            }
+
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Layer type")
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 20
+
+                RadioButton {
+                    id: radioRaster
+                    text: qsTr("Raster")
+                    checked: false
                 }
 
-                TabButton {
-                    text: qsTr("Local Layer")
+                RadioButton {
+                    id: radioVector
+                    text: qsTr("Vector")
+                    checked: true
                 }
             }
 
-            StackLayout {
+            Label {
                 Layout.fillWidth: true
-                currentIndex: tabBar.currentIndex
+                text: qsTr("Legend name")
+            }
 
-                // Remote Layer Tab
-                ColumnLayout {
-                    spacing: 10
+            QfTextField {
+                id: textFieldFileName
+                Layout.fillWidth: true
+                text: 'QGIS Hackfest POIs'
+            }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 20
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("URL")
+                visible: comboLayerSource.currentIndex === 0
+            }
 
-                        RadioButton {
-                            id: radioRemoteRaster
-                            text: qsTr("Raster")
-                            checked: false
-                        }
+            QfTextField {
+                id: textFieldUrl
+                Layout.fillWidth: true
+                text: "https://raw.githubusercontent.com/qgis/QGIS/refs/heads/master/resources/data/qgis-hackfests.json"
+                visible: comboLayerSource.currentIndex === 0
+            }
 
-                        RadioButton {
-                            id: radioRemoteVector
-                            text: qsTr("Vector")
-                            checked: true
-                        }
-                    }
+            Button {
+                Layout.fillWidth: true
+                text: qsTr("Browse local file...")
+                onClicked: getFile()
+                visible: comboLayerSource.currentIndex === 1
+            }
 
-                    Label {
-                        id: labelRemoteFileName
-                        Layout.fillWidth: true
-                        text: qsTr("Legend name")
-                    }
-
-                    QfTextField {
-                        id: textFieldRemoteFileName
-                        Layout.fillWidth: true
-                        text: 'QGIS Hackfest POIs'
-                    }
-
-                    Label {
-                        id: labelRemoteUrl
-                        Layout.fillWidth: true
-                        text: qsTr("URL")
-                    }
-
-                    QfTextField {
-                        id: textFieldRemoteUrl
-                        Layout.fillWidth: true
-                        text: "https://raw.githubusercontent.com/qgis/QGIS/refs/heads/master/resources/data/qgis-hackfests.json"
-                    }
-                }
-
-                // Local Layer Tab
-                ColumnLayout {
-                    spacing: 10
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 20
-
-                        RadioButton {
-                            id: radioLocalRaster
-                            text: qsTr("Raster")
-                            checked: false
-                        }
-
-                        RadioButton {
-                            id: radioLocalVector
-                            text: qsTr("Vector")
-                            checked: true
-                        }
-                    }
-
-                    Label {
-                        id: labelLocalFileName
-                        Layout.fillWidth: true
-                        text: qsTr("Legend name")
-                    }
-
-                    QfTextField {
-                        id: textFieldLocalFileName
-                        Layout.fillWidth: true
-                        text: 'QGIS Hackfest POIs'
-                    }
-
-                    Button {
-                        Layout.fillWidth: true
-                        text: qsTr("Browse local file...")
-                        onClicked: getFile()
-                    }
-                    Label {
-                        id: labelSelectedLocalFileName
-                        Layout.fillWidth: true
-                        text: connections.localPath ? connections.localPath : qsTr("No file selected")
-                        font.italic: !connections.localPath
-                    }
-                }
+            Label {
+                Layout.fillWidth: true
+                text: connections.localPath ? connections.localPath : qsTr("No file selected")
+                font.italic: !connections.localPath
+                visible: comboLayerSource.currentIndex === 1
             }
         }
 
         onAccepted: {
-            if (tabBar.currentIndex === 0) {
-                loadRemoteLayer(textFieldRemoteUrl.text, textFieldRemoteFileName.text, radioRemoteVector.checked);
+            if (comboLayerSource.currentIndex === 0) {
+                loadRemoteLayer(textFieldUrl.text, textFieldFileName.text, radioVector.checked);
             } 
-            else{
-                loadLayer(connections.localPath, textFieldLocalFileName.text, radioLocalVector.checked);
-                }
+            else {
+                loadLayer(connections.localPath, textFieldFileName.text, radioVector.checked);
+            }
         }
     }
 }
