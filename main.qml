@@ -68,8 +68,19 @@ Item {
         visible: false
         modal: true
         font: Theme.defaultFont
-        standardButtons: Dialog.Apply | Dialog.Cancel
+        standardButtons: undefined
         title: qsTr("Load read-only layer")
+        footer: DialogButtonBox {
+                    QfButton {
+                        text: qsTr("Load Layer")
+                        DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                        enabled: ((comboLayerSource.currentIndex === 0 && textFieldUrl.text) || (comboLayerSource.currentIndex === 1 && connections.localPath)) && textFieldFileName.text
+                    }
+                    QfButton {
+                        text: qsTr("Cancel")
+                        DialogButtonBox.buttonRole: DialogButtonBox.DestructiveRole
+                    }
+}
 
         width: mainWindow.width * 0.8
         x: (mainWindow.width - width) / 2
