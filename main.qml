@@ -184,6 +184,12 @@ Item {
                         text: qsTr("Browse local file...")
                         onClicked: getFile()
                     }
+                    Label {
+                        id: labelSelectedLocalFileName
+                        Layout.fillWidth: true
+                        text: connections.localPath ? connections.localPath : qsTr("No file selected")
+                        font.italic: !connections.localPath
+                    }
                 }
             }
         }
