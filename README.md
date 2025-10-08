@@ -7,6 +7,8 @@ This [QField](https://qfield.org) plugin loads readonly remote layers
 
 ## Installation
 
+This plugin requires QField 3.8 or later (not released yet, so for now it works *only* with QField master https://play.google.com/store/apps/details?id=ch.opengis.qfield_dev)
+
 To install the plugin, [download the plugin from the releases page](../../releases)
 and follow the [plugin installation guide](https://docs.qfield.org/how-to/plugins/#application-plugins) to install
 the zipped plugin in QField.
