@@ -22,7 +22,7 @@ Item {
         id: pluginButton
         iconSource: 'icon.svg'
         iconColor: Theme.mainColor
-        bgcolor: Theme.darkGray
+        bgcolor: Theme.toolButtonBackgroundColor
         round: true
 
         onClicked: {
@@ -31,12 +31,18 @@ Item {
     }
 
     Connections {
-        id: connections
+        id: resourceSourceConnection
         target: __resourceSource
-        property string localPath: ""
+
         function onResourceReceived(path) {
             if (path) {
-                localPath = qgisProject.homePath + '/tmp/' + path;
+                const localPath = qgisProject.homePath + '/tmp/' + path;
+                localPathTextField.text = localPath;
+
+                const name = FileUtils.fileName(localPath);
+                legendNameTextField.text = name;
+
+                layerDialog.updateLoadLayerState();
             }
         }
     }
@@ -52,10 +58,11 @@ Item {
     }
 
     function loadLayer(path, title, is_vector=false) {
-        mainWindow.displayToast(qsTr('Loading ') + path + ' as ' + title);
+        mainWindow.displayToast(qsTr('Loading %1 as %2').arg(path).arg(title));
         let layer;
         if (is_vector) {
             layer = LayerUtils.loadVectorLayer(path, title ? title : qsTr("Read-only layer"));
+            layer.readOnly = true;
         } else {
             layer = LayerUtils.loadRasterLayer(path, title ? title : qsTr("Read-only layer"));
         }
@@ -65,31 +72,15 @@ Item {
     QfDialog {
         id: layerDialog
         parent: mainWindow.contentItem
-        visible: false
-        modal: true
-        font: Theme.defaultFont
-        standardButtons: undefined
-        title: qsTr("Load read-only layer")
-        footer: DialogButtonBox {
-                    QfButton {
-                        text: qsTr("Load Layer")
-                        DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-                        enabled: ((comboLayerSource.currentIndex === 0 && textFieldUrl.text) || (comboLayerSource.currentIndex === 1 && connections.localPath)) && textFieldFileName.text
-                    }
-                    QfButton {
-                        text: qsTr("Cancel")
-                        DialogButtonBox.buttonRole: DialogButtonBox.DestructiveRole
-                    }
-}
-
         width: mainWindow.width * 0.8
         x: (mainWindow.width - width) / 2
         y: (mainWindow.height - height) / 2
-
-        onAboutToShow: {
-            // reset fields
-            connections.localPath = "";
-        }
+        visible: false
+        modal: true
+        font: Theme.defaultFont
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        
+        title: qsTr("Add Read-Only Layer")
 
         ColumnLayout {
             width: parent.width
@@ -97,83 +88,132 @@ Item {
 
             Label {
                 Layout.fillWidth: true
-                text: qsTr("Layer source")
-            }
-
-            QfComboBox {
-                id: comboLayerSource
-                Layout.fillWidth: true
-                model: [qsTr("Remote Layer"), qsTr("Local Layer")]
-                currentIndex: 0
-            }
-
-            Label {
-                Layout.fillWidth: true
+                font: Theme.defaultFont
                 text: qsTr("Layer type")
             }
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 20
+            QfToggleButtonGroup {
+              id: layerTypeToggleButtonGroup
+              Layout.fillWidth: true
+              Layout.preferredHeight: legendNameTextField.height
+              model: [qsTr("Raster"), qsTr("Vector")]
+              font: Theme.defaultFont
+              buttonMininumWidth: parent.width / 2 - buttonSpacing
+              selectedIndex: 0
 
-                RadioButton {
-                    id: radioRaster
-                    text: qsTr("Raster")
-                    checked: false
-                }
-
-                RadioButton {
-                    id: radioVector
-                    text: qsTr("Vector")
-                    checked: true
-                }
+              onSelectedIndexChanged: {
+                  layerDialog.updateLoadLayerState();
+              }
             }
 
             Label {
                 Layout.fillWidth: true
-                text: qsTr("Legend name")
+                font: Theme.defaultFont
+                text: qsTr("Layer source")
             }
 
-            QfTextField {
-                id: textFieldFileName
-                Layout.fillWidth: true
-                text: 'QGIS Hackfest POIs'
+            QfToggleButtonGroup {
+              id: layerSourceToggleButtonGroup
+              Layout.fillWidth: true
+              Layout.preferredHeight: legendNameTextField.height
+              model: [qsTr("Remote"), qsTr("Local")]
+              font: Theme.defaultFont
+              buttonMininumWidth: parent.width / 2 - buttonSpacing
+              selectedIndex: 0
+
+              onSelectedIndexChanged: {
+                  layerDialog.updateLoadLayerState();
+              }
             }
 
             Label {
                 Layout.fillWidth: true
                 text: qsTr("URL")
-                visible: comboLayerSource.currentIndex === 0
+                visible: layerSourceToggleButtonGroup.selectedIndex === 0
             }
 
             QfTextField {
-                id: textFieldUrl
+                id: urlTextField
                 Layout.fillWidth: true
-                text: "https://raw.githubusercontent.com/qgis/QGIS/refs/heads/master/resources/data/qgis-hackfests.json"
-                visible: comboLayerSource.currentIndex === 0
-            }
+                text: ""
+                visible: layerSourceToggleButtonGroup.selectedIndex === 0
 
-            Button {
-                Layout.fillWidth: true
-                text: qsTr("Browse local file...")
-                onClicked: getFile()
-                visible: comboLayerSource.currentIndex === 1
+                onTextChanged: {
+                    layerDialog.updateLoadLayerState();
+                }
+
+                onEditingFinished: {
+                    const name = UrlUtils.urlDetail(urlTextField.text, "fileName");
+                    if (name !== "") {
+                        legendNameTextField.text = name;
+                    }
+                }
             }
 
             Label {
                 Layout.fillWidth: true
-                text: connections.localPath ? connections.localPath : qsTr("No file selected")
-                font.italic: !connections.localPath
-                visible: comboLayerSource.currentIndex === 1
+                text: qsTr("File")
+                visible: layerSourceToggleButtonGroup.selectedIndex === 1
+                wrapMode: Text.Wrap
+            }
+
+            QfTextField {
+                id: localPathTextField
+                Layout.fillWidth: true
+                visible: layerSourceToggleButtonGroup.selectedIndex === 1 && text !== ""
+                text: ""
+                readOnly: true
+            }
+
+            QfButton {
+                Layout.fillWidth: true
+                text: qsTr("Browse local file...")
+                visible: layerSourceToggleButtonGroup.selectedIndex === 1
+
+                onClicked: {
+                    getFile()
+                }
+            }
+
+            Label {
+                Layout.fillWidth: true
+                font: Theme.defaultFont
+                text: qsTr("Legend name")
+            }
+
+            QfTextField {
+                id: legendNameTextField
+                Layout.fillWidth: true
+                text: ""
+
+                onTextChanged: {
+                    layerDialog.updateLoadLayerState();
+                }
             }
         }
 
+        onAboutToShow: {
+            standardButton(Dialog.Ok).text = "Load Layer";
+            localPathTextField.text = "";
+
+            updateLoadLayerState();
+        }
+
         onAccepted: {
-            if (comboLayerSource.currentIndex === 0) {
-                loadRemoteLayer(textFieldUrl.text, textFieldFileName.text, radioVector.checked);
-            } 
+            if (layerSourceToggleButtonGroup.selectedIndex === 0) {
+                loadRemoteLayer(urlTextField.text, legendNameTextField.text, layerTypeToggleButtonGroup.selectedIndex == 1);
+            }
             else {
-                loadLayer(connections.localPath, textFieldFileName.text, radioVector.checked);
+                loadLayer(localPathTextField.text, legendNameTextField.text, layerTypeToggleButtonGroup.selectedIndex == 1);
+            }
+        }
+
+        function updateLoadLayerState() {
+            const okButton = standardButton(Dialog.Ok);
+            if (layerSourceToggleButtonGroup.selectedIndex === 0) {
+                okButton.enabled = urlTextField.text !== "";
+            } else {
+                okButton.enabled = localPathTextField.text !== "";
             }
         }
     }
