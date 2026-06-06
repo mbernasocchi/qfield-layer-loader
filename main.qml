@@ -54,6 +54,9 @@ Item {
 
     function loadRemoteLayer(url, title, is_vector) {
         let path = "/vsicurl/" + url;
+        if (path.endsWith(".zip")) {
+            path = "/vsizip/" + path;
+        }
         loadLayer(path, title, is_vector);
     }
 
