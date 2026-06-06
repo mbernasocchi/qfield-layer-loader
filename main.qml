@@ -16,6 +16,21 @@ Item {
 
     Component.onCompleted: {
         iface.addItemToPluginsToolbar(pluginButton);
+
+        layerTypeToggleButtonGroup.selectedIndex = settings.lastType;
+        layerSourceToggleButtonGroup.selectedIndex = settings.lastSource;
+        legendNameTextField.text = settings.lastLegendName;
+        urlTextField.text = settings.lastUrl;
+    }
+
+    Settings {
+        id: settings
+        category: "qfield-layer-loader"
+
+        property int lastType: 0
+        property int lastSource: 0
+        property string lastLegendName: ""
+        property string lastUrl: ""
     }
 
     QfToolButton {
@@ -36,12 +51,8 @@ Item {
 
         function onResourceReceived(path) {
             if (path) {
-                const localPath = qgisProject.homePath + '/tmp/' + path;
-                localPathTextField.text = localPath;
-
-                const name = FileUtils.fileName(localPath);
-                legendNameTextField.text = name;
-
+                localPathTextField.text = qgisProject.homePath + '/tmp/' + path;
+                layerDialog.updateLegendName();
                 layerDialog.updateLoadLayerState();
             }
         }
@@ -83,7 +94,7 @@ Item {
         font: Theme.defaultFont
         standardButtons: Dialog.Ok | Dialog.Cancel
         
-        title: qsTr("Add Read-Only Layer")
+        title: qsTr("Load Read-Only Layer")
 
         ColumnLayout {
             width: parent.width
@@ -146,10 +157,7 @@ Item {
                 }
 
                 onEditingFinished: {
-                    const name = UrlUtils.urlDetail(urlTextField.text, "fileName");
-                    if (name !== "") {
-                        legendNameTextField.text = name;
-                    }
+                    layerDialog.updateLegendName();
                 }
             }
 
@@ -203,11 +211,28 @@ Item {
         }
 
         onAccepted: {
+            settings.lastType = layerTypeToggleButtonGroup.selectedIndex;
+            settings.lastSource = layerSourceToggleButtonGroup.selectedIndex;
+            settings.lastLegendName = legendNameTextField.text;
+
             if (layerSourceToggleButtonGroup.selectedIndex === 0) {
+                settings.lastUrl = urlTextField.text;
                 loadRemoteLayer(urlTextField.text, legendNameTextField.text, layerTypeToggleButtonGroup.selectedIndex == 1);
             }
             else {
                 loadLayer(localPathTextField.text, legendNameTextField.text, layerTypeToggleButtonGroup.selectedIndex == 1);
+            }
+        }
+
+        function updateLegendName() {
+            if (layerSourceToggleButtonGroup.selectedIndex === 0 && urlTextField.text !== "") {
+                const name = UrlUtils.urlDetail(urlTextField.text, "fileName");
+                if (name !== "") {
+                    legendNameTextField.text = name;
+                }
+            } else if (layerSourceToggleButtonGroup.selectedIndex === 1 && localPathTextField.text !== "") {
+                const name = FileUtils.fileName(localPathTextField.text);
+                legendNameTextField.text = name;
             }
         }
 
