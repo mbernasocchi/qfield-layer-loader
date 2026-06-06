@@ -43,7 +43,7 @@ Item {
 
     function getFile() {
         platformUtilities.requestStoragePermission();
-        __resourceSource = platformUtilities.getFile(qgisProject.homePath + '/tmp/', '{filename}', this);
+        __resourceSource = platformUtilities.getFile(qgisProject.homePath + '/tmp/', '{filename}', '*/*', this);
     }
 
     function loadRemoteLayer(url, title, is_vector) {
