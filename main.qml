@@ -71,8 +71,28 @@ Item {
         loadLayer(path, title, is_vector);
     }
 
+    function loadLayers(path, title, is_vector=false) {
+      let layers = LayerUtils.loadMapLayers(path, title);
+      for (let layer of layers) {
+        if (layer.type == Qgis.LayerType.Vector && is_vector) {
+          ProjectUtils.addMapLayer(qgisProject, layer);
+          continue;
+        } else if (layer.type == Qgis.LayerType.Raster && !is_vector) {
+          ProjectUtils.addMapLayer(qgisProject, layer);
+          continue;
+        }
+
+        delete layer;
+      }
+    }
+
     function loadLayer(path, title, is_vector=false) {
         mainWindow.displayToast(qsTr('Loading %1 as %2').arg(path).arg(title));
+        if (LayerUtils.loadMapLayers) {
+          loadLayers(path, title, is_vector);
+          return;
+        }
+
         let layer;
         if (is_vector) {
             layer = LayerUtils.loadVectorLayer(path, title ? title : qsTr("Read-only layer"));
